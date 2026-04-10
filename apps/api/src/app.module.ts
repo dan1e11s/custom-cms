@@ -7,6 +7,7 @@ import { AppService } from './app.service'
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard'
 import { RolesGuard } from './common/guards/roles.guard'
 import { AuthModule } from './modules/auth/auth.module'
+import { UsersModule } from './modules/users/users.module'
 import { PrismaModule } from './prisma/prisma.module'
 
 @Module({
@@ -18,8 +19,8 @@ import { PrismaModule } from './prisma/prisma.module'
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     PrismaModule,
     AuthModule,
+    UsersModule,
     // Модули подключаются по мере реализации фаз:
-    // UsersModule    — Шаг 1.4
     // PagesModule    — Фаза 2
     // CatalogModule  — Фаза 3
     // BlogModule     — Фаза 3
