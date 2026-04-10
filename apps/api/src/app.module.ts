@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
+import { APP_GUARD } from '@nestjs/core'
 import { ThrottlerModule } from '@nestjs/throttler'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard'
+import { RolesGuard } from './common/guards/roles.guard'
 import { AuthModule } from './modules/auth/auth.module'
 import { PrismaModule } from './prisma/prisma.module'
 
@@ -16,7 +19,7 @@ import { PrismaModule } from './prisma/prisma.module'
     PrismaModule,
     AuthModule,
     // Модули подключаются по мере реализации фаз:
-    // UsersModule    — Шаг 1.3
+    // UsersModule    — Шаг 1.4
     // PagesModule    — Фаза 2
     // CatalogModule  — Фаза 3
     // BlogModule     — Фаза 3
@@ -27,6 +30,10 @@ import { PrismaModule } from './prisma/prisma.module'
     // NotificationsModule — Фаза 4
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+  ],
 })
 export class AppModule {}
