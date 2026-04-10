@@ -1,0 +1,262 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum Role {
+  GUEST
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum PageStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// ─── Users ──────────────────────────────────────────────────────────────────
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  username     String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  avatar       String?
+  bio          String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  pages        Page[]
+  blogPosts    BlogPost[]
+  gramPosts    GramPost[]
+  comments     Comment[]
+  likes        Like[]
+  forumPosts   ForumPost[]
+  forumThreads ForumThread[]
+  media        Media[]
+}
+
+// ─── Pages ───────────────────────────────────────────────────────────────────
+
+model Page {
+  id        Int        @id @default(autoincrement())
+  slug      String     @unique
+  title     String
+  status    PageStatus @default(DRAFT)
+  template  String     @default("landing")
+  blocks    Json       // Массив блоков с конфигурацией
+  authorId  Int
+  author    User       @relation(fields: [authorId], references: [id])
+  seo       PageSeo?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([slug])
+  @@index([status])
+}
+
+model PageSeo {
+  id         Int     @id @default(autoincrement())
+  pageId     Int     @unique
+  page       Page    @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  metaTitle  String?
+  metaDesc   String?
+  h1         String?
+  canonical  String?
+  ogTitle    String?
+  ogDesc     String?
+  ogImage    String?
+  noindex    Boolean @default(false)
+  schemaType String? // Article | Product | FAQ | etc.
+  schemaData Json?   // Кастомные данные микроразметки
+}
+
+// ─── Catalog ─────────────────────────────────────────────────────────────────
+
+model Category {
+  id          Int        @id @default(autoincrement())
+  slug        String     @unique
+  name        String
+  type        String     // 'catalog' | 'blog'
+  parentId    Int?
+  parent      Category?  @relation("SubCategories", fields: [parentId], references: [id])
+  children    Category[] @relation("SubCategories")
+  description String?
+  image       String?
+  seoTitle    String?
+  seoDesc     String?
+  products    Product[]
+  blogPosts   BlogPost[]
+}
+
+model Product {
+  id          Int        @id @default(autoincrement())
+  slug        String     @unique
+  name        String
+  description String?
+  price       Decimal?
+  oldPrice    Decimal?
+  images      String[]
+  inStock     Boolean    @default(true)
+  categoryId  Int?
+  category    Category?  @relation(fields: [categoryId], references: [id])
+  attributes  Json?      // Кастомные характеристики
+  seoTitle    String?
+  seoDesc     String?
+  status      PageStatus @default(DRAFT)
+  createdAt   DateTime   @default(now())
+
+  @@index([slug])
+  @@index([categoryId])
+}
+
+// ─── Blog ─────────────────────────────────────────────────────────────────────
+
+model BlogPost {
+  id          Int        @id @default(autoincrement())
+  slug        String     @unique
+  title       String
+  excerpt     String?
+  content     String     // HTML от Tiptap
+  coverImage  String?
+  authorId    Int
+  author      User       @relation(fields: [authorId], references: [id])
+  categoryId  Int?
+  category    Category?  @relation(fields: [categoryId], references: [id])
+  tags        Tag[]      @relation("BlogPostTags")
+  status      PageStatus @default(DRAFT)
+  publishedAt DateTime?
+  seoTitle    String?
+  seoDesc     String?
+  views       Int        @default(0)
+  comments    Comment[]  @relation("BlogComments")
+  createdAt   DateTime   @default(now())
+
+  @@index([slug])
+  @@index([status, publishedAt])
+}
+
+model Tag {
+  id        Int        @id @default(autoincrement())
+  slug      String     @unique
+  name      String
+  blogPosts BlogPost[] @relation("BlogPostTags")
+  gramPosts GramPost[] @relation("GramPostTags")
+}
+
+// ─── Gram ─────────────────────────────────────────────────────────────────────
+
+model GramPost {
+  id        Int        @id @default(autoincrement())
+  content   String
+  images    String[]
+  authorId  Int
+  author    User       @relation(fields: [authorId], references: [id])
+  tags      Tag[]      @relation("GramPostTags")
+  likes     Like[]
+  comments  Comment[]  @relation("GramComments")
+  status    PageStatus @default(PUBLISHED)
+  createdAt DateTime   @default(now())
+
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+// ─── Likes & Comments ────────────────────────────────────────────────────────
+
+model Like {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  user       User      @relation(fields: [userId], references: [id])
+  gramPostId Int?
+  gramPost   GramPost? @relation(fields: [gramPostId], references: [id])
+  createdAt  DateTime  @default(now())
+
+  @@unique([userId, gramPostId])
+}
+
+model Comment {
+  id          Int        @id @default(autoincrement())
+  content     String
+  authorId    Int
+  author      User       @relation(fields: [authorId], references: [id])
+  parentId    Int?
+  parent      Comment?   @relation("Replies", fields: [parentId], references: [id])
+  replies     Comment[]  @relation("Replies")
+  gramPostId  Int?
+  gramPost    GramPost?  @relation("GramComments", fields: [gramPostId], references: [id])
+  blogPostId  Int?
+  blogPost    BlogPost?  @relation("BlogComments", fields: [blogPostId], references: [id])
+  forumPostId Int?
+  forumPost   ForumPost? @relation(fields: [forumPostId], references: [id])
+  isDeleted   Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+}
+
+// ─── Forum ────────────────────────────────────────────────────────────────────
+
+model ForumSection {
+  id          Int           @id @default(autoincrement())
+  slug        String        @unique
+  title       String
+  description String?
+  order       Int           @default(0)
+  threads     ForumThread[]
+}
+
+model ForumThread {
+  id         Int          @id @default(autoincrement())
+  slug       String       @unique
+  title      String
+  sectionId  Int
+  section    ForumSection @relation(fields: [sectionId], references: [id])
+  authorId   Int
+  author     User         @relation(fields: [authorId], references: [id])
+  isPinned   Boolean      @default(false)
+  isLocked   Boolean      @default(false)
+  views      Int          @default(0)
+  posts      ForumPost[]
+  createdAt  DateTime     @default(now())
+  lastPostAt DateTime     @default(now())
+
+  @@index([sectionId, lastPostAt])
+}
+
+model ForumPost {
+  id        Int         @id @default(autoincrement())
+  content   String
+  authorId  Int
+  author    User        @relation(fields: [authorId], references: [id])
+  threadId  Int
+  thread    ForumThread @relation(fields: [threadId], references: [id])
+  comments  Comment[]
+  isDeleted Boolean     @default(false)
+  createdAt DateTime    @default(now())
+}
+
+// ─── Media ────────────────────────────────────────────────────────────────────
+
+model Media {
+  id           Int      @id @default(autoincrement())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  alt          String?
+  uploadedById Int
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@index([mimeType])
+}
