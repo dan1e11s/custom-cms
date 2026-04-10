@@ -8,6 +8,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard'
 import { RolesGuard } from './common/guards/roles.guard'
 import { AuthModule } from './modules/auth/auth.module'
 import { MediaModule } from './modules/media/media.module'
+import { PagesModule } from './modules/pages/pages.module'
 import { UsersModule } from './modules/users/users.module'
 import { PrismaModule } from './prisma/prisma.module'
 
@@ -22,8 +23,9 @@ import { PrismaModule } from './prisma/prisma.module'
     AuthModule,
     UsersModule,
     MediaModule,
+    PagesModule,
     // Модули подключаются по мере реализации фаз:
-    // PagesModule    — Фаза 2
+    // [x] PagesModule — Фаза 2
     // CatalogModule  — Фаза 3
     // BlogModule     — Фаза 3
     // GramModule     — Фаза 4
