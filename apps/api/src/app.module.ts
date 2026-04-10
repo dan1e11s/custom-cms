@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
+import { PrismaModule } from './prisma/prisma.module'
 
 @Module({
   imports: [
@@ -9,8 +10,8 @@ import { AppService } from './app.service'
       isGlobal: true,
       envFilePath: '.env',
     }),
+    PrismaModule,
     // Модули подключаются по мере реализации фаз:
-    // PrismaModule   — Шаг 1.1
     // AuthModule     — Шаг 1.2
     // UsersModule    — Шаг 1.3
     // PagesModule    — Фаза 2
