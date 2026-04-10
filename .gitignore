@@ -1,0 +1,27 @@
+node_modules/
+.env
+.env.local
+.env.*.local
+dist/
+.next/
+*.log
+
+# pnpm
+.pnpm-store/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.user
+
+# Build outputs
+build/
+out/
+
+# Prisma
+prisma/migrations/*.sql.bak
