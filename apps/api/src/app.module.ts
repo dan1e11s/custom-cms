@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
+import { ThrottlerModule } from '@nestjs/throttler'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
+import { AuthModule } from './modules/auth/auth.module'
 import { PrismaModule } from './prisma/prisma.module'
 
 @Module({
@@ -10,9 +12,10 @@ import { PrismaModule } from './prisma/prisma.module'
       isGlobal: true,
       envFilePath: '.env',
     }),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     PrismaModule,
+    AuthModule,
     // Модули подключаются по мере реализации фаз:
-    // AuthModule     — Шаг 1.2
     // UsersModule    — Шаг 1.3
     // PagesModule    — Фаза 2
     // CatalogModule  — Фаза 3
