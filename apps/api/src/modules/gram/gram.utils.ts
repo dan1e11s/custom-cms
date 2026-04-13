@@ -1,4 +1,4 @@
-import sanitizeHtml from 'sanitize-html'
+import * as sanitizeHtml from 'sanitize-html'
 
 const RU_TRANSLIT: Record<string, string> = {
   а: 'a',
