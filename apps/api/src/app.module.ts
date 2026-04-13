@@ -10,6 +10,7 @@ import { RolesGuard } from './common/guards/roles.guard'
 import { AuthModule } from './modules/auth/auth.module'
 import { BlogModule } from './modules/blog/blog.module'
 import { CatalogModule } from './modules/catalog/catalog.module'
+import { GramModule } from './modules/gram/gram.module'
 import { MediaModule } from './modules/media/media.module'
 import { PagesModule } from './modules/pages/pages.module'
 import { SeoModule } from './modules/seo/seo.module'
@@ -34,13 +35,14 @@ import { PrismaModule } from './prisma/prisma.module'
     CatalogModule,
     BlogModule,
     WebsocketsModule,
+    GramModule,
     // Модули подключаются по мере реализации фаз:
     // [x] PagesModule      — Фаза 2
     // [x] SeoModule        — Фаза 2
     // [x] CatalogModule    — Фаза 3
     // [x] BlogModule       — Фаза 3
     // [x] WebsocketsModule — Фаза 4
-    // GramModule           — Фаза 4
+    // [x] GramModule       — Фаза 4
     // ForumModule          — Фаза 4
     // NotificationsModule  — Фаза 4
   ],
