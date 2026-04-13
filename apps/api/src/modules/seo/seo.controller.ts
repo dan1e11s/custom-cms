@@ -11,7 +11,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common'
-import { ApiOperation, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { Roles } from '../../common/decorators/roles.decorator'
 import { Public } from '../../common/decorators/public.decorator'
 import { CreateRedirectDto, UpdateRedirectDto } from './dto/redirect.dto'
@@ -62,6 +62,7 @@ export class SeoPublicController {
 // ── Admin эндпоинты ───────────────────────────────────────────────────────────
 
 @ApiTags('SEO (Admin)')
+@ApiBearerAuth()
 @Roles('ADMIN')
 @Controller('admin/seo')
 export class SeoAdminController {

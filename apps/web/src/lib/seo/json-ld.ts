@@ -1,5 +1,6 @@
 import type { FaqItem } from '@/types/blocks'
 import type { Page } from '@/types/pages'
+import type { Product } from '@/types/catalog'
 import { BASE_URL, SITE_NAME } from './config'
 import { stripHtml } from './utils'
 
@@ -54,6 +55,59 @@ function buildFaqSchema(items: FaqItem[]): object {
         text: stripHtml(item.answer),
       },
     })),
+  }
+}
+
+export function buildProductSchema(product: Product): object {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description ?? undefined,
+    image: product.images.length > 0 ? product.images : undefined,
+    offers: {
+      '@type': 'Offer',
+      price: product.price ?? '0',
+      priceCurrency: 'RUB',
+      availability: product.inStock
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+    },
+  }
+}
+
+export function buildProductBreadcrumbSchema(product: Product): object {
+  const items: object[] = [
+    { '@type': 'ListItem', position: 1, name: SITE_NAME, item: BASE_URL },
+    { '@type': 'ListItem', position: 2, name: 'Каталог', item: `${BASE_URL}/catalog` },
+  ]
+
+  if (product.category) {
+    items.push({
+      '@type': 'ListItem',
+      position: 3,
+      name: product.category.name,
+      item: `${BASE_URL}/catalog?categorySlug=${product.category.slug}`,
+    })
+    items.push({
+      '@type': 'ListItem',
+      position: 4,
+      name: product.name,
+      item: `${BASE_URL}/catalog/${product.category.slug}/${product.slug}`,
+    })
+  } else {
+    items.push({
+      '@type': 'ListItem',
+      position: 3,
+      name: product.name,
+      item: `${BASE_URL}/catalog/uncategorized/${product.slug}`,
+    })
+  }
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items,
   }
 }
 

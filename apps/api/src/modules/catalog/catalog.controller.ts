@@ -11,7 +11,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common'
-import { ApiOperation, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { Public } from '../../common/decorators/public.decorator'
 import { Roles } from '../../common/decorators/roles.decorator'
 import { CatalogService } from './catalog.service'
@@ -63,6 +63,7 @@ export class CatalogPublicController {
 // ── Admin эндпоинты ───────────────────────────────────────────────────────────
 
 @ApiTags('Catalog (Admin)')
+@ApiBearerAuth()
 @Roles('ADMIN')
 @Controller('admin/catalog')
 export class CatalogAdminController {
