@@ -14,6 +14,7 @@ import { MediaModule } from './modules/media/media.module'
 import { PagesModule } from './modules/pages/pages.module'
 import { SeoModule } from './modules/seo/seo.module'
 import { UsersModule } from './modules/users/users.module'
+import { WebsocketsModule } from './modules/websockets/websockets.module'
 import { PrismaModule } from './prisma/prisma.module'
 
 @Module({
@@ -32,14 +33,16 @@ import { PrismaModule } from './prisma/prisma.module'
     SeoModule,
     CatalogModule,
     BlogModule,
+    WebsocketsModule,
     // Модули подключаются по мере реализации фаз:
-    // [x] PagesModule   — Фаза 2
-    // [x] SeoModule     — Фаза 2
-    // [x] CatalogModule — Фаза 3
-    // [x] BlogModule    — Фаза 3
-    // GramModule     — Фаза 4
-    // ForumModule    — Фаза 4
-    // NotificationsModule — Фаза 4
+    // [x] PagesModule      — Фаза 2
+    // [x] SeoModule        — Фаза 2
+    // [x] CatalogModule    — Фаза 3
+    // [x] BlogModule       — Фаза 3
+    // [x] WebsocketsModule — Фаза 4
+    // GramModule           — Фаза 4
+    // ForumModule          — Фаза 4
+    // NotificationsModule  — Фаза 4
   ],
   controllers: [AppController],
   providers: [
