@@ -7,6 +7,7 @@ import { AppService } from './app.service'
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard'
 import { RolesGuard } from './common/guards/roles.guard'
 import { AuthModule } from './modules/auth/auth.module'
+import { CatalogModule } from './modules/catalog/catalog.module'
 import { MediaModule } from './modules/media/media.module'
 import { PagesModule } from './modules/pages/pages.module'
 import { SeoModule } from './modules/seo/seo.module'
@@ -26,10 +27,11 @@ import { PrismaModule } from './prisma/prisma.module'
     MediaModule,
     PagesModule,
     SeoModule,
+    CatalogModule,
     // Модули подключаются по мере реализации фаз:
-    // [x] PagesModule — Фаза 2
-    // [x] SeoModule   — Фаза 2
-    // CatalogModule  — Фаза 3
+    // [x] PagesModule  — Фаза 2
+    // [x] SeoModule    — Фаза 2
+    // [x] CatalogModule — Фаза 3
     // BlogModule     — Фаза 3
     // GramModule     — Фаза 4
     // ForumModule    — Фаза 4
