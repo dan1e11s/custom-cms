@@ -1,5 +1,5 @@
 import { BlockRenderer } from '@/components/blocks/BlockRenderer'
-import { serverApi, ServerApiError } from '@/lib/api/server'
+import { serverApi } from '@/lib/api/server'
 import { buildJsonLd } from '@/lib/seo/json-ld'
 import { buildPageMetadata } from '@/lib/seo/metadata'
 import type { Page, PagesListResponse } from '@/types/pages'
@@ -45,11 +45,8 @@ export default async function LandingPage({ params }: Props) {
       tags: [`page-${params.slug}`],
       revalidate,
     })
-  } catch (err) {
-    if (err instanceof ServerApiError && err.status === 404) {
-      notFound()
-    }
-    throw err
+  } catch {
+    notFound()
   }
 
   const schemas = buildJsonLd(page)

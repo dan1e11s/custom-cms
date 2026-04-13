@@ -244,6 +244,29 @@ model ForumPost {
   createdAt DateTime    @default(now())
 }
 
+// ─── SEO ──────────────────────────────────────────────────────────────────────
+
+model SeoSettings {
+  id             Int       @id @default(autoincrement())
+  siteName       String    @default("Мой сайт")
+  defaultOgImage String?
+  titleTemplate  String    @default("%s | Мой сайт")
+  sitemapCache   String?   @db.Text // XML-кэш sitemap
+  sitemapBuiltAt DateTime?
+  updatedAt      DateTime  @updatedAt
+}
+
+model Redirect {
+  id         Int      @id @default(autoincrement())
+  from       String   @unique
+  to         String
+  statusCode Int      @default(301)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@index([from])
+}
+
 // ─── Media ────────────────────────────────────────────────────────────────────
 
 model Media {

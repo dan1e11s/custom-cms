@@ -9,6 +9,7 @@ import { RolesGuard } from './common/guards/roles.guard'
 import { AuthModule } from './modules/auth/auth.module'
 import { MediaModule } from './modules/media/media.module'
 import { PagesModule } from './modules/pages/pages.module'
+import { SeoModule } from './modules/seo/seo.module'
 import { UsersModule } from './modules/users/users.module'
 import { PrismaModule } from './prisma/prisma.module'
 
@@ -24,14 +25,14 @@ import { PrismaModule } from './prisma/prisma.module'
     UsersModule,
     MediaModule,
     PagesModule,
+    SeoModule,
     // Модули подключаются по мере реализации фаз:
     // [x] PagesModule — Фаза 2
+    // [x] SeoModule   — Фаза 2
     // CatalogModule  — Фаза 3
     // BlogModule     — Фаза 3
     // GramModule     — Фаза 4
     // ForumModule    — Фаза 4
-    // MediaModule    — Фаза 3
-    // SeoModule      — Фаза 2
     // NotificationsModule — Фаза 4
   ],
   controllers: [AppController],
