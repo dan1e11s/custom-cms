@@ -99,6 +99,13 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
     client.leave(`forum:thread:${threadId}`)
   }
 
+  /** Индикатор "пользователь печатает" — ретранслируем в комнату темы */
+  @SubscribeMessage('forum:typing')
+  handleForumTyping(client: Socket, threadId: number) {
+    const username = client.data.user?.username ?? 'Аноним'
+    client.to(`forum:thread:${threadId}`).emit('forum:user_typing', { threadId, username })
+  }
+
   // ── Утилиты для сервисов ────────────────────────────────────────────────────
 
   /** Отправить событие в комнату (используется из GramService, ForumService) */
