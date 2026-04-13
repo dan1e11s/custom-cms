@@ -198,13 +198,20 @@ export class PagesService {
   // ── Обновить SEO ──────────────────────────────────────────────────────────
 
   async updateSeo(id: number, dto: UpdatePageSeoDto) {
-    await this.findById(id)
+    const page = await this.findById(id)
 
-    return this.prisma.pageSeo.upsert({
+    const seo = await this.prisma.pageSeo.upsert({
       where: { pageId: id },
       create: { pageId: id, ...dto },
       update: dto,
     })
+
+    // Ревалидируем, если страница опубликована — SEO-изменения видны сразу
+    if (page.status === PageStatus.PUBLISHED) {
+      this.triggerRevalidate(page.slug).catch(() => {})
+    }
+
+    return seo
   }
 
   // ── Удалить ───────────────────────────────────────────────────────────────
