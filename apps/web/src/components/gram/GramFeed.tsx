@@ -1,15 +1,14 @@
 'use client'
 
-import { useEffect, useRef, useCallback, useState } from 'react'
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
-import { Loader2, Plus, Wifi, WifiOff } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Loader2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { GramPostCard } from './GramPostCard'
 import { CreatePostModal } from './CreatePostModal'
 import { gramApi } from '@/lib/api/gram'
 import { useGramSocket } from '@/lib/hooks/useGramSocket'
 import { useAuthStore } from '@/store/auth.store'
-import type { GramPost, GramFeedResponse } from '@/types/gram'
+import type { GramPost } from '@/types/gram'
 
 interface GramFeedProps {
   /** Первая страница загружена сервером (SSR) */
@@ -19,50 +18,46 @@ interface GramFeedProps {
 
 export function GramFeed({ initialPosts, initialNextCursor }: GramFeedProps) {
   const user = useAuthStore((s) => s.user)
-  const queryClient = useQueryClient()
+
+  // ── Локальное состояние ───────────────────────────────────────────────────
+  // Используем useState(initialPosts), а не React Query initialData.
+  // React Query с initialData игнорирует его когда в кэше уже есть данные
+  // (повторный визит страницы), что вызывает hydration mismatch.
+  const [posts, setPosts] = useState<GramPost[]>(initialPosts)
+  const [cursor, setCursor] = useState<number | undefined>(initialNextCursor)
+  const [hasMore, setHasMore] = useState(!!initialNextCursor)
+  const [isFetchingMore, setIsFetchingMore] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
-  const [wsConnected, setWsConnected] = useState(false)
+
   // Счётчики лайков из WS — обновляются real-time
   const [liveLikes, setLiveLikes] = useState<Record<number, number>>({})
+
   const sentinelRef = useRef<HTMLDivElement>(null)
 
-  // ── Infinite Query ────────────────────────────────────────────────────────
+  // ── Загрузка следующей порции ─────────────────────────────────────────────
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery<
-    GramFeedResponse,
-    Error
-  >({
-    queryKey: ['gram-feed'],
-    queryFn: ({ pageParam }) => gramApi.getFeed(pageParam as number | undefined),
-    initialPageParam: undefined,
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
-    initialData: {
-      pages: [{ posts: initialPosts, nextCursor: initialNextCursor }],
-      pageParams: [undefined],
-    },
-  })
-
-  const allPosts = data?.pages.flatMap((p) => p.posts) ?? []
+  const fetchMore = useCallback(async () => {
+    if (!hasMore || isFetchingMore) return
+    setIsFetchingMore(true)
+    try {
+      const data = await gramApi.getFeed(cursor)
+      setPosts((prev) => [...prev, ...data.posts])
+      setCursor(data.nextCursor)
+      setHasMore(!!data.nextCursor)
+    } catch {
+      // ignore
+    } finally {
+      setIsFetchingMore(false)
+    }
+  }, [cursor, hasMore, isFetchingMore])
 
   // ── WebSocket ─────────────────────────────────────────────────────────────
 
   useGramSocket({
-    onNewPost: useCallback(
-      (post: GramPost) => {
-        // Добавляем новый пост в начало кэша
-        queryClient.setQueryData<typeof data>(['gram-feed'], (old) => {
-          if (!old) return old
-          return {
-            ...old,
-            pages: [
-              { posts: [post, ...old.pages[0].posts], nextCursor: old.pages[0].nextCursor },
-              ...old.pages.slice(1),
-            ],
-          }
-        })
-      },
-      [queryClient],
-    ),
+    onNewPost: useCallback((post: GramPost) => {
+      // Добавляем в начало, дедуп по id
+      setPosts((prev) => (prev.some((p) => p.id === post.id) ? prev : [post, ...prev]))
+    }, []),
     onLikeUpdate: useCallback(({ postId, count }: { postId: number; count: number }) => {
       setLiveLikes((prev) => ({ ...prev, [postId]: count }))
     }, []),
@@ -76,34 +71,20 @@ export function GramFeed({ initialPosts, initialNextCursor }: GramFeedProps) {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage()
-        }
+        if (entries[0].isIntersecting) fetchMore()
       },
       { rootMargin: '200px' },
     )
 
     observer.observe(sentinel)
     return () => observer.disconnect()
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+  }, [fetchMore])
 
   // ── Обработчик создания поста ─────────────────────────────────────────────
 
-  const handleCreated = useCallback(
-    (post: GramPost) => {
-      queryClient.setQueryData<typeof data>(['gram-feed'], (old) => {
-        if (!old) return old
-        return {
-          ...old,
-          pages: [
-            { posts: [post, ...old.pages[0].posts], nextCursor: old.pages[0].nextCursor },
-            ...old.pages.slice(1),
-          ],
-        }
-      })
-    },
-    [queryClient],
-  )
+  const handleCreated = useCallback((post: GramPost) => {
+    setPosts((prev) => [post, ...prev])
+  }, [])
 
   // ── Рендер ────────────────────────────────────────────────────────────────
 
@@ -115,7 +96,7 @@ export function GramFeed({ initialPosts, initialNextCursor }: GramFeedProps) {
           onClick={() => setCreateOpen(true)}
           className="flex w-full items-center gap-3 rounded-xl border bg-card px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/50"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary uppercase flex-shrink-0">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold uppercase text-primary">
             {user.username[0]}
           </div>
           <span>Что нового, @{user.username}?</span>
@@ -124,7 +105,7 @@ export function GramFeed({ initialPosts, initialNextCursor }: GramFeedProps) {
       )}
 
       {/* Посты */}
-      {allPosts.length === 0 ? (
+      {posts.length === 0 ? (
         <div className="py-20 text-center text-muted-foreground">
           <p className="font-medium">Постов пока нет</p>
           {user && (
@@ -136,20 +117,20 @@ export function GramFeed({ initialPosts, initialNextCursor }: GramFeedProps) {
         </div>
       ) : (
         <>
-          {allPosts.map((post) => (
+          {posts.map((post) => (
             <GramPostCard key={post.id} post={post} externalLikeCount={liveLikes[post.id]} />
           ))}
 
           {/* Sentinel для Intersection Observer */}
           <div ref={sentinelRef} className="h-4" />
 
-          {isFetchingNextPage && (
+          {isFetchingMore && (
             <div className="flex justify-center py-4">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           )}
 
-          {!hasNextPage && allPosts.length > 0 && (
+          {!hasMore && posts.length > 0 && (
             <p className="py-4 text-center text-sm text-muted-foreground">Все посты загружены</p>
           )}
         </>
