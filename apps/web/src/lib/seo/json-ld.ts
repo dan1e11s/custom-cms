@@ -1,6 +1,7 @@
 import type { FaqItem } from '@/types/blocks'
 import type { Page } from '@/types/pages'
 import type { Product } from '@/types/catalog'
+import type { BlogPost } from '@/types/blog'
 import { BASE_URL, SITE_NAME } from './config'
 import { stripHtml } from './utils'
 
@@ -55,6 +56,64 @@ function buildFaqSchema(items: FaqItem[]): object {
         text: stripHtml(item.answer),
       },
     })),
+  }
+}
+
+export function buildArticleSchema(post: BlogPost): object {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    ...(post.excerpt && { description: stripHtml(post.excerpt) }),
+    ...(post.coverImage && { image: [post.coverImage] }),
+    datePublished: post.publishedAt ?? post.createdAt,
+    dateModified: post.createdAt,
+    author: {
+      '@type': 'Person',
+      name: post.author.username,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: BASE_URL,
+    },
+    url: `${BASE_URL}/blog/${post.slug}`,
+    inLanguage: 'ru',
+  }
+}
+
+export function buildArticleBreadcrumbSchema(post: BlogPost): object {
+  const items: object[] = [
+    { '@type': 'ListItem', position: 1, name: SITE_NAME, item: BASE_URL },
+    { '@type': 'ListItem', position: 2, name: 'Блог', item: `${BASE_URL}/blog` },
+  ]
+
+  if (post.category) {
+    items.push({
+      '@type': 'ListItem',
+      position: 3,
+      name: post.category.name,
+      item: `${BASE_URL}/blog?categorySlug=${post.category.slug}`,
+    })
+    items.push({
+      '@type': 'ListItem',
+      position: 4,
+      name: post.title,
+      item: `${BASE_URL}/blog/${post.slug}`,
+    })
+  } else {
+    items.push({
+      '@type': 'ListItem',
+      position: 3,
+      name: post.title,
+      item: `${BASE_URL}/blog/${post.slug}`,
+    })
+  }
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items,
   }
 }
 
