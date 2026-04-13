@@ -31,6 +31,7 @@ export function ReviewsBlock({ data }: { data: ReviewsBlockData }) {
               <p className="flex-1 leading-relaxed text-gray-600">{review.text}</p>
               <div className="flex items-center gap-3 border-t border-gray-100 pt-4">
                 {review.avatar ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={review.avatar}
                     alt={review.author}

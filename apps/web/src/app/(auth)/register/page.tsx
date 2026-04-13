@@ -42,8 +42,9 @@ export default function RegisterPage() {
     try {
       await authApi.register({ email, username, password })
       router.push('/login?registered=1')
-    } catch (e: any) {
-      setError('root', { message: e.message ?? 'Ошибка регистрации' })
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Ошибка регистрации'
+      setError('root', { message: msg })
     }
   }
 

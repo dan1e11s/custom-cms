@@ -9,7 +9,7 @@ import { ProductGallery } from '@/components/catalog/ProductGallery'
 import { catalogServerApi } from '@/lib/api/catalog'
 import { buildProductSchema, buildProductBreadcrumbSchema } from '@/lib/seo/json-ld'
 import { BASE_URL, SITE_NAME } from '@/lib/seo/config'
-import type { Product, ProductsListResponse } from '@/types/catalog'
+import type { Product } from '@/types/catalog'
 
 export const revalidate = 3600
 

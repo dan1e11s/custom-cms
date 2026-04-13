@@ -26,6 +26,7 @@ export function CasesBlock({ data }: { data: CasesBlockData }) {
             >
               {c.image && (
                 <div className="h-52 overflow-hidden bg-gray-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={c.image}
                     alt={c.title}

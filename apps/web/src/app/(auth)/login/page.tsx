@@ -35,8 +35,9 @@ export default function LoginPage() {
       setUser(res.user)
       setToken(res.accessToken)
       router.push('/cabinet')
-    } catch (e: any) {
-      setError('root', { message: e.message ?? 'Неверный email или пароль' })
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Неверный email или пароль'
+      setError('root', { message: msg })
     }
   }
 

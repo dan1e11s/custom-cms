@@ -14,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { MediaPicker } from '../MediaPicker'
 
 interface Props {
   blockId: string

@@ -44,6 +44,7 @@ export function SliderBlock({ data }: { data: SliderBlockData }) {
         >
           {data.items.map((item, i) => (
             <div key={i} className="relative min-w-full">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={item.image}
                 alt={item.alt || `Слайд ${i + 1}`}

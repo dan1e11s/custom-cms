@@ -35,6 +35,7 @@ export function InfoBlock({ data }: { data: InfoBlockData }) {
           {/* Изображение */}
           {data.image && (
             <div className="w-full overflow-hidden rounded-xl md:w-5/12">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={data.image}
                 alt={data.imageAlt || ''}

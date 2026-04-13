@@ -53,7 +53,7 @@ export const blogApi = {
   createPost: (data: Partial<BlogPost> & { tags?: string[]; content: string; title: string }) =>
     api.post<BlogPost>('/admin/blog/posts', data),
 
-  updatePost: (id: number, data: Partial<BlogPost> & { tags?: string[] }) =>
+  updatePost: (id: number, data: Omit<Partial<BlogPost>, 'tags'> & { tags?: string[] }) =>
     api.patch<BlogPost>(`/admin/blog/posts/${id}`, data),
 
   publishPost: (id: number) => api.patch<BlogPost>(`/admin/blog/posts/${id}/publish`, {}),

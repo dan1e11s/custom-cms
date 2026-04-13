@@ -221,7 +221,9 @@ export class BlogService {
       ...(dto.excerpt !== undefined && { excerpt: dto.excerpt }),
       ...(dto.content !== undefined && { content: dto.content }),
       ...(dto.coverImage !== undefined && { coverImage: dto.coverImage }),
-      ...(dto.categoryId !== undefined && { category: { connect: { id: dto.categoryId } } }),
+      // Используем truthy-проверку: 0 и undefined оба пропускаются
+      ...(dto.categoryId &&
+        dto.categoryId > 0 && { category: { connect: { id: dto.categoryId } } }),
       ...(dto.seoTitle !== undefined && { seoTitle: dto.seoTitle }),
       ...(dto.seoDesc !== undefined && { seoDesc: dto.seoDesc }),
       ...(dto.publishedAt !== undefined && { publishedAt: new Date(dto.publishedAt) }),

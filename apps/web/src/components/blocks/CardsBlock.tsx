@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Container } from '@/components/ui/container'
@@ -35,7 +36,7 @@ export function CardsBlock({ data }: { data: CardsBlockData }) {
             >
               {card.image && (
                 <div className="relative h-48 overflow-hidden bg-gray-100">
-                  <img src={card.image} alt={card.title} className="h-full w-full object-cover" />
+                  <Image src={card.image} alt={card.title} fill className="object-cover" />
                   {card.badge && <Badge className="absolute left-3 top-3">{card.badge}</Badge>}
                 </div>
               )}
