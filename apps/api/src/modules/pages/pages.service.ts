@@ -1,5 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { PageStatus } from '@prisma/client'
+import { RevalidationService } from '../../common/revalidation/revalidation.service'
 import { PrismaService } from '../../prisma/prisma.service'
 import { CreatePageDto } from './dto/create-page.dto'
 import { ListPagesDto } from './dto/list-pages.dto'
@@ -15,7 +16,10 @@ const PAGE_INCLUDE = {
 
 @Injectable()
 export class PagesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly revalidation: RevalidationService,
+  ) {}
 
   // ── Список страниц (публичный: только PUBLISHED) ──────────────────────────
 
@@ -106,7 +110,7 @@ export class PagesService {
       await this.ensureSlugUnique(dto.slug, id)
     }
 
-    return this.prisma.page.update({
+    const page = await this.prisma.page.update({
       where: { id },
       data: {
         ...(dto.title !== undefined && { title: dto.title }),
@@ -117,6 +121,12 @@ export class PagesService {
       },
       include: PAGE_INCLUDE,
     })
+
+    if (page.status === PageStatus.PUBLISHED) {
+      this.revalidation.revalidate(`page-${page.slug}`).catch(() => {})
+    }
+
+    return page
   }
 
   // ── Обновить только блоки (patch) ─────────────────────────────────────────
@@ -124,11 +134,17 @@ export class PagesService {
   async updateBlocks(id: number, dto: UpdateBlocksDto) {
     await this.findById(id)
 
-    return this.prisma.page.update({
+    const page = await this.prisma.page.update({
       where: { id },
       data: { blocks: dto.blocks, updatedAt: new Date() },
       include: PAGE_INCLUDE,
     })
+
+    if (page.status === PageStatus.PUBLISHED) {
+      this.revalidation.revalidate(`page-${page.slug}`).catch(() => {})
+    }
+
+    return page
   }
 
   // ── Публикация ────────────────────────────────────────────────────────────
@@ -142,10 +158,7 @@ export class PagesService {
       include: PAGE_INCLUDE,
     })
 
-    // ISR-инвалидация — уведомляем Next.js перегенерировать страницу
-    this.triggerRevalidate(page.slug).catch(() => {
-      // не блокируем ответ, если фронт недоступен
-    })
+    this.revalidation.revalidate(`page-${page.slug}`).catch(() => {})
 
     return page
   }
@@ -155,11 +168,15 @@ export class PagesService {
   async unpublish(id: number) {
     await this.findById(id)
 
-    return this.prisma.page.update({
+    const page = await this.prisma.page.update({
       where: { id },
       data: { status: PageStatus.DRAFT },
       include: PAGE_INCLUDE,
     })
+
+    this.revalidation.revalidate(`page-${page.slug}`).catch(() => {})
+
+    return page
   }
 
   // ── Архивировать ─────────────────────────────────────────────────────────
@@ -167,11 +184,15 @@ export class PagesService {
   async archive(id: number) {
     await this.findById(id)
 
-    return this.prisma.page.update({
+    const page = await this.prisma.page.update({
       where: { id },
       data: { status: PageStatus.ARCHIVED },
       include: PAGE_INCLUDE,
     })
+
+    this.revalidation.revalidate(`page-${page.slug}`).catch(() => {})
+
+    return page
   }
 
   // ── Дублировать ───────────────────────────────────────────────────────────
@@ -206,9 +227,8 @@ export class PagesService {
       update: dto,
     })
 
-    // Ревалидируем, если страница опубликована — SEO-изменения видны сразу
     if (page.status === PageStatus.PUBLISHED) {
-      this.triggerRevalidate(page.slug).catch(() => {})
+      this.revalidation.revalidate(`page-${page.slug}`).catch(() => {})
     }
 
     return seo
@@ -217,8 +237,9 @@ export class PagesService {
   // ── Удалить ───────────────────────────────────────────────────────────────
 
   async remove(id: number) {
-    await this.findById(id)
+    const page = await this.findById(id)
     await this.prisma.page.delete({ where: { id } })
+    this.revalidation.revalidate(`page-${page.slug}`).catch(() => {})
     return { success: true }
   }
 
@@ -234,16 +255,5 @@ export class PagesService {
     if (existing) {
       throw new ConflictException(`Slug "${slug}" уже занят`)
     }
-  }
-
-  private async triggerRevalidate(slug: string) {
-    const frontendUrl = process.env.FRONTEND_URL
-    const secret = process.env.REVALIDATE_SECRET
-    if (!frontendUrl || !secret) return
-
-    await fetch(`${frontendUrl}/api/revalidate?tag=page-${slug}`, {
-      method: 'POST',
-      headers: { 'x-revalidate-secret': secret },
-    })
   }
 }

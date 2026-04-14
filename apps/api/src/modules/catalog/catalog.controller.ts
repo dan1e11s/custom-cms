@@ -14,6 +14,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { Public } from '../../common/decorators/public.decorator'
 import { Roles } from '../../common/decorators/roles.decorator'
+import { RevalidationService } from '../../common/revalidation/revalidation.service'
 import { CatalogService } from './catalog.service'
 import { CreateCategoryDto } from './dto/create-category.dto'
 import { CreateProductDto } from './dto/create-product.dto'
@@ -67,27 +68,36 @@ export class CatalogPublicController {
 @Roles('ADMIN')
 @Controller('admin/catalog')
 export class CatalogAdminController {
-  constructor(private readonly catalogService: CatalogService) {}
+  constructor(
+    private readonly catalogService: CatalogService,
+    private readonly revalidation: RevalidationService,
+  ) {}
 
   // ── Категории ──────────────────────────────────────────────────────────────
 
   @Post('categories')
   @ApiOperation({ summary: 'Создать категорию' })
-  createCategory(@Body() dto: CreateCategoryDto) {
-    return this.catalogService.createCategory(dto)
+  async createCategory(@Body() dto: CreateCategoryDto) {
+    const result = await this.catalogService.createCategory(dto)
+    this.revalidation.revalidate('catalog').catch(() => {})
+    return result
   }
 
   @Patch('categories/:id')
   @ApiOperation({ summary: 'Обновить категорию' })
-  updateCategory(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateCategoryDto) {
-    return this.catalogService.updateCategory(id, dto)
+  async updateCategory(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateCategoryDto) {
+    const result = await this.catalogService.updateCategory(id, dto)
+    this.revalidation.revalidate('catalog').catch(() => {})
+    return result
   }
 
   @Delete('categories/:id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Удалить категорию (без вложенных)' })
-  deleteCategory(@Param('id', ParseIntPipe) id: number) {
-    return this.catalogService.deleteCategory(id)
+  async deleteCategory(@Param('id', ParseIntPipe) id: number) {
+    const result = await this.catalogService.deleteCategory(id)
+    this.revalidation.revalidate('catalog').catch(() => {})
+    return result
   }
 
   // ── Товары ─────────────────────────────────────────────────────────────────
@@ -106,32 +116,42 @@ export class CatalogAdminController {
 
   @Post('products')
   @ApiOperation({ summary: 'Создать товар' })
-  createProduct(@Body() dto: CreateProductDto) {
-    return this.catalogService.createProduct(dto)
+  async createProduct(@Body() dto: CreateProductDto) {
+    const result = await this.catalogService.createProduct(dto)
+    this.revalidation.revalidateAll(['catalog', `product-${result.slug}`])
+    return result
   }
 
   @Patch('products/:id')
   @ApiOperation({ summary: 'Обновить товар' })
-  updateProduct(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateProductDto) {
-    return this.catalogService.updateProduct(id, dto)
+  async updateProduct(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateProductDto) {
+    const result = await this.catalogService.updateProduct(id, dto)
+    this.revalidation.revalidateAll(['catalog', `product-${result.slug}`])
+    return result
   }
 
   @Patch('products/:id/publish')
   @ApiOperation({ summary: 'Опубликовать товар' })
-  publishProduct(@Param('id', ParseIntPipe) id: number) {
-    return this.catalogService.publishProduct(id)
+  async publishProduct(@Param('id', ParseIntPipe) id: number) {
+    const result = await this.catalogService.publishProduct(id)
+    this.revalidation.revalidateAll(['catalog', `product-${result.slug}`])
+    return result
   }
 
   @Patch('products/:id/unpublish')
   @ApiOperation({ summary: 'Снять с публикации' })
-  unpublishProduct(@Param('id', ParseIntPipe) id: number) {
-    return this.catalogService.unpublishProduct(id)
+  async unpublishProduct(@Param('id', ParseIntPipe) id: number) {
+    const result = await this.catalogService.unpublishProduct(id)
+    this.revalidation.revalidateAll(['catalog', `product-${result.slug}`])
+    return result
   }
 
   @Delete('products/:id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Удалить товар' })
-  deleteProduct(@Param('id', ParseIntPipe) id: number) {
-    return this.catalogService.deleteProduct(id)
+  async deleteProduct(@Param('id', ParseIntPipe) id: number) {
+    const result = await this.catalogService.deleteProduct(id)
+    this.revalidation.revalidate('catalog').catch(() => {})
+    return result
   }
 }

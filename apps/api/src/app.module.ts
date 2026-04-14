@@ -7,6 +7,7 @@ import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard'
 import { RolesGuard } from './common/guards/roles.guard'
+import { RevalidationModule } from './common/revalidation/revalidation.module'
 import { AdminModule } from './modules/admin/admin.module'
 import { AuthModule } from './modules/auth/auth.module'
 import { BlogModule } from './modules/blog/blog.module'
@@ -30,6 +31,7 @@ import { PrismaModule } from './prisma/prisma.module'
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     PrismaModule,
+    RevalidationModule,
     AdminModule,
     AuthModule,
     UsersModule,

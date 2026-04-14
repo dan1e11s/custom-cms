@@ -41,7 +41,7 @@ export default async function CatalogPage({ searchParams }: Props) {
   let activeCategory: Category | undefined
 
   const [tree, productsData] = await Promise.all([
-    catalogServerApi.getCategoryTree().catch(() => [] as Category[]),
+    catalogServerApi.getCategoryTree({ tags: ['catalog'] }).catch(() => [] as Category[]),
     catalogServerApi
       .getProducts(
         {
@@ -54,7 +54,7 @@ export default async function CatalogPage({ searchParams }: Props) {
           sortBy: (searchParams.sortBy as 'createdAt' | 'price' | 'name') ?? 'createdAt',
           sortOrder: (searchParams.sortOrder as 'asc' | 'desc') ?? 'desc',
         },
-        { revalidate: false },
+        { tags: ['catalog'], revalidate: false },
       )
       .catch(() => ({ items: [], total: 0, page: 1, limit, pages: 0 })),
   ])
@@ -80,7 +80,7 @@ export default async function CatalogPage({ searchParams }: Props) {
             sortBy: (searchParams.sortBy as 'createdAt' | 'price' | 'name') ?? 'createdAt',
             sortOrder: (searchParams.sortOrder as 'asc' | 'desc') ?? 'desc',
           },
-          { revalidate: false },
+          { tags: ['catalog'], revalidate: false },
         )
         Object.assign(productsData, filtered)
       } catch {

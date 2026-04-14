@@ -16,6 +16,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { CurrentUser } from '../../common/decorators/current-user.decorator'
 import { Public } from '../../common/decorators/public.decorator'
 import { Roles } from '../../common/decorators/roles.decorator'
+import { RevalidationService } from '../../common/revalidation/revalidation.service'
 import { BlogService } from './blog.service'
 import { CreateCommentDto } from './dto/create-comment.dto'
 import { CreatePostDto } from './dto/create-post.dto'
@@ -83,7 +84,10 @@ export class BlogPublicController {
 @Roles('ADMIN')
 @Controller('admin/blog')
 export class BlogAdminController {
-  constructor(private readonly blogService: BlogService) {}
+  constructor(
+    private readonly blogService: BlogService,
+    private readonly revalidation: RevalidationService,
+  ) {}
 
   @Get('posts')
   @ApiOperation({ summary: 'Все статьи (все статусы)' })
@@ -99,38 +103,50 @@ export class BlogAdminController {
 
   @Post('posts')
   @ApiOperation({ summary: 'Создать статью' })
-  create(@Body() dto: CreatePostDto, @CurrentUser() user: { id: number }) {
-    return this.blogService.create(dto, user.id)
+  async create(@Body() dto: CreatePostDto, @CurrentUser() user: { id: number }) {
+    const result = await this.blogService.create(dto, user.id)
+    this.revalidation.revalidate('blog').catch(() => {})
+    return result
   }
 
   @Patch('posts/:id')
   @ApiOperation({ summary: 'Обновить статью' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdatePostDto) {
-    return this.blogService.update(id, dto)
+  async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdatePostDto) {
+    const result = await this.blogService.update(id, dto)
+    this.revalidation.revalidateAll(['blog', `blog-${result.slug}`])
+    return result
   }
 
   @Patch('posts/:id/publish')
   @ApiOperation({ summary: 'Опубликовать немедленно' })
-  publish(@Param('id', ParseIntPipe) id: number) {
-    return this.blogService.publish(id)
+  async publish(@Param('id', ParseIntPipe) id: number) {
+    const result = await this.blogService.publish(id)
+    this.revalidation.revalidateAll(['blog', `blog-${result.slug}`])
+    return result
   }
 
   @Patch('posts/:id/unpublish')
   @ApiOperation({ summary: 'Снять с публикации' })
-  unpublish(@Param('id', ParseIntPipe) id: number) {
-    return this.blogService.unpublish(id)
+  async unpublish(@Param('id', ParseIntPipe) id: number) {
+    const result = await this.blogService.unpublish(id)
+    this.revalidation.revalidateAll(['blog', `blog-${result.slug}`])
+    return result
   }
 
   @Patch('posts/:id/schedule')
   @ApiOperation({ summary: 'Запланировать публикацию (publishAt — ISO дата)' })
-  schedule(@Param('id', ParseIntPipe) id: number, @Body() dto: SchedulePublishDto) {
-    return this.blogService.schedulePublish(id, new Date(dto.publishAt))
+  async schedule(@Param('id', ParseIntPipe) id: number, @Body() dto: SchedulePublishDto) {
+    const result = await this.blogService.schedulePublish(id, new Date(dto.publishAt))
+    this.revalidation.revalidate('blog').catch(() => {})
+    return result
   }
 
   @Delete('posts/:id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Удалить статью' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.blogService.remove(id)
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    const result = await this.blogService.remove(id)
+    this.revalidation.revalidate('blog').catch(() => {})
+    return result
   }
 }

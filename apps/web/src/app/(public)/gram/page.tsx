@@ -21,7 +21,7 @@ export default async function GramPage() {
   let initialNextCursor: number | undefined
 
   try {
-    const data = await gramServerApi.getFeed(20, { revalidate: 60 })
+    const data = await gramServerApi.getFeed(20, { tags: ['gram'], revalidate: false })
     initialPosts = data.posts
     initialNextCursor = data.nextCursor
   } catch {

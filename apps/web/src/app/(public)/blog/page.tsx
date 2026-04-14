@@ -44,11 +44,13 @@ export default async function BlogPage({ searchParams }: Props) {
           sortBy: searchParams.sortBy ?? 'publishedAt',
           sortOrder: (searchParams.sortOrder as 'asc' | 'desc') ?? 'desc',
         },
-        { revalidate: false },
+        { tags: ['blog'], revalidate: false },
       )
       .catch((): BlogListResponse => ({ items: [], total: 0, page: 1, limit, pages: 0 })),
-    blogServerApi.getTags({ revalidate: 3600 }).catch((): BlogTag[] => []),
-    blogServerApi.getCategories({ revalidate: 3600 }).catch((): BlogCategory[] => []),
+    blogServerApi.getTags({ tags: ['blog'], revalidate: false }).catch((): BlogTag[] => []),
+    blogServerApi
+      .getCategories({ tags: ['blog'], revalidate: false })
+      .catch((): BlogCategory[] => []),
   ])
 
   const hasFilters = searchParams.search || searchParams.categorySlug || searchParams.tag

@@ -13,6 +13,7 @@ import {
   Settings,
   MessageSquare,
   Instagram,
+  ExternalLink,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -63,6 +64,18 @@ export function AdminSidebar() {
           })}
         </ul>
       </nav>
+
+      <div className="border-t border-border p-2">
+        <Link
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <ExternalLink className="h-4 w-4 shrink-0" />
+          На сайт
+        </Link>
+      </div>
     </aside>
   )
 }

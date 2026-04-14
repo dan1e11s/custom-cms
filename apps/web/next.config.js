@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    // Отключаем Router Cache для динамических страниц (force-dynamic).
+    // Без этого браузер хранит RSC-пейлоад до 30 сек в памяти и не делает
+    // новый запрос к серверу даже после revalidateTag().
+    staleTimes: {
+      dynamic: 0,
+    },
+  },
   images: {
     remotePatterns: [
       // MinIO / локальный S3

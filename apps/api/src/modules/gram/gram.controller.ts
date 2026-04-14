@@ -14,6 +14,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { CurrentUser } from '../../common/decorators/current-user.decorator'
 import { Public } from '../../common/decorators/public.decorator'
+import { RevalidationService } from '../../common/revalidation/revalidation.service'
 import { CreateGramCommentDto } from './dto/create-gram-comment.dto'
 import { CreateGramPostDto } from './dto/create-gram-post.dto'
 import { GetFeedDto } from './dto/get-feed.dto'
@@ -27,7 +28,10 @@ interface AuthUser {
 @ApiTags('Gram')
 @Controller('gram')
 export class GramController {
-  constructor(private readonly gramService: GramService) {}
+  constructor(
+    private readonly gramService: GramService,
+    private readonly revalidation: RevalidationService,
+  ) {}
 
   // ── Публичные ─────────────────────────────────────────────────────────────
 
@@ -71,16 +75,20 @@ export class GramController {
   @ApiBearerAuth()
   @Post('posts')
   @ApiOperation({ summary: 'Создать пост (USER+)' })
-  createPost(@Body() dto: CreateGramPostDto, @CurrentUser() user: AuthUser) {
-    return this.gramService.createPost(dto, user.id)
+  async createPost(@Body() dto: CreateGramPostDto, @CurrentUser() user: AuthUser) {
+    const result = await this.gramService.createPost(dto, user.id)
+    this.revalidation.revalidate('gram').catch(() => {})
+    return result
   }
 
   @ApiBearerAuth()
   @Delete('posts/:id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Удалить пост (свой или ADMIN/MODERATOR)' })
-  deletePost(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
-    return this.gramService.deletePost(id, user.id, user.role)
+  async deletePost(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
+    const result = await this.gramService.deletePost(id, user.id, user.role)
+    this.revalidation.revalidate('gram').catch(() => {})
+    return result
   }
 
   @ApiBearerAuth()
