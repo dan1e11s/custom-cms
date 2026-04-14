@@ -7,6 +7,7 @@ import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard'
 import { RolesGuard } from './common/guards/roles.guard'
+import { AdminModule } from './modules/admin/admin.module'
 import { AuthModule } from './modules/auth/auth.module'
 import { BlogModule } from './modules/blog/blog.module'
 import { CatalogModule } from './modules/catalog/catalog.module'
@@ -29,6 +30,7 @@ import { PrismaModule } from './prisma/prisma.module'
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     PrismaModule,
+    AdminModule,
     AuthModule,
     UsersModule,
     MediaModule,
