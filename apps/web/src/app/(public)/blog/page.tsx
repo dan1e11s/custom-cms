@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { Container } from '@/components/ui/container'
 import { Skeleton } from '@/components/ui/skeleton'
+import { FadeIn } from '@/components/ui/fade-in'
 import { PostCard } from '@/components/blog/PostCard'
 import { BlogFilters } from '@/components/blog/BlogFilters'
 import { CatalogPagination } from '@/components/catalog/CatalogPagination'
@@ -80,8 +81,10 @@ export default async function BlogPage({ searchParams }: Props) {
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {postsData.items.map((post) => (
-            <PostCard key={post.id} post={post} />
+          {postsData.items.map((post, i) => (
+            <FadeIn key={post.id} delay={i * 0.05}>
+              <PostCard post={post} />
+            </FadeIn>
           ))}
         </div>
       )}

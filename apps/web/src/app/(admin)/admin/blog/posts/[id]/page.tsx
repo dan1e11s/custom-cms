@@ -19,6 +19,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { RichTextEditor } from '@/components/admin/page-editor/RichTextEditor'
+import { MediaPicker } from '@/components/admin/page-editor/MediaPicker'
 import { blogApi } from '@/lib/api/blog'
 import { catalogApi } from '@/lib/api/catalog'
 import type { BlogPost, BlogCategory } from '@/types/blog'
@@ -260,11 +261,11 @@ export default function PostEditorPage({ params }: Props) {
           </div>
 
           <div className="space-y-1.5">
-            <Label>Обложка (URL изображения)</Label>
-            <Input
-              {...form.register('coverImage')}
-              type="url"
-              placeholder="https://example.com/cover.jpg"
+            <Label>Обложка</Label>
+            <MediaPicker
+              value={form.watch('coverImage') ?? ''}
+              onChange={(url) => form.setValue('coverImage', url, { shouldDirty: true })}
+              placeholder="Выберите из медиатеки или вставьте URL"
             />
             {form.formState.errors.coverImage && (
               <p className="text-xs text-red-500">{form.formState.errors.coverImage.message}</p>

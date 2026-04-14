@@ -120,9 +120,9 @@ function CommentItem({
         )}
 
         {/* Ответы */}
-        {comment.replies.length > 0 && (
+        {(comment.replies ?? []).length > 0 && (
           <div className="space-y-4 pt-2">
-            {comment.replies.map((reply) => (
+            {(comment.replies ?? []).map((reply) => (
               <CommentItem
                 key={reply.id}
                 comment={reply}
@@ -161,7 +161,9 @@ export function Comments({ slug }: CommentsProps) {
       setComments((prev) => [...prev, { ...created, replies: [] }])
     } else {
       setComments((prev) =>
-        prev.map((c) => (c.id === parentId ? { ...c, replies: [...c.replies, created] } : c)),
+        prev.map((c) =>
+          c.id === parentId ? { ...c, replies: [...(c.replies ?? []), created] } : c,
+        ),
       )
     }
   }, [])

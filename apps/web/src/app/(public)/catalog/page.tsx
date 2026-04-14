@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { Container } from '@/components/ui/container'
 import { Skeleton } from '@/components/ui/skeleton'
+import { FadeIn } from '@/components/ui/fade-in'
 import { CategorySidebar } from '@/components/catalog/CategorySidebar'
 import { CatalogFilters } from '@/components/catalog/CatalogFilters'
 import { CatalogPagination } from '@/components/catalog/CatalogPagination'
@@ -123,8 +124,10 @@ export default async function CatalogPage({ searchParams }: Props) {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-              {productsData.items.map((product) => (
-                <ProductCard key={product.id} product={product} />
+              {productsData.items.map((product, i) => (
+                <FadeIn key={product.id} delay={i * 0.04}>
+                  <ProductCard product={product} />
+                </FadeIn>
               ))}
             </div>
           )}

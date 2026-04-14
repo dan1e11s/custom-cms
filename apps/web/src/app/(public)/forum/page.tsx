@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Container } from '@/components/ui/container'
+import { FadeIn } from '@/components/ui/fade-in'
 import { ForumSectionCard } from '@/components/forum/ForumSectionCard'
 import { forumServerApi } from '@/lib/api/forum'
 import { SITE_NAME } from '@/lib/seo/config'
@@ -38,8 +39,10 @@ export default async function ForumPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {sections.map((section) => (
-              <ForumSectionCard key={section.id} section={section} />
+            {sections.map((section, i) => (
+              <FadeIn key={section.id} delay={i * 0.06}>
+                <ForumSectionCard section={section} />
+              </FadeIn>
             ))}
           </div>
         )}

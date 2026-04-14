@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { RichTextEditor } from '@/components/admin/page-editor/RichTextEditor'
+import { MediaPicker } from '@/components/admin/page-editor/MediaPicker'
 import { catalogApi } from '@/lib/api/catalog'
 import type { Product, Category } from '@/types/catalog'
 
@@ -283,16 +284,19 @@ export default function ProductEditorPage({ params }: Props) {
             </Button>
           </div>
           {images.map((url, i) => (
-            <div key={i} className="flex gap-2">
-              <Input
-                value={url}
-                onChange={(e) => setImages((p) => p.map((v, j) => (j === i ? e.target.value : v)))}
-                placeholder="https://example.com/image.jpg"
-              />
+            <div key={i} className="flex gap-2 items-start">
+              <div className="flex-1">
+                <MediaPicker
+                  value={url}
+                  onChange={(val) => setImages((p) => p.map((v, j) => (j === i ? val : v)))}
+                  placeholder="Выберите из медиатеки или вставьте URL"
+                />
+              </div>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
+                className="mt-1 shrink-0"
                 onClick={() => setImages((p) => p.filter((_, j) => j !== i))}
                 disabled={images.length === 1}
               >

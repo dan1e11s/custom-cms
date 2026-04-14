@@ -24,6 +24,21 @@ export class MinioService implements OnModuleInit {
     if (!exists) {
       await this.client.makeBucket(this.bucket)
     }
+
+    // Делаем бакет публичным — чтобы изображения были доступны без подписи
+    const policy = JSON.stringify({
+      Version: '2012-10-17',
+      Statement: [
+        {
+          Effect: 'Allow',
+          Principal: { AWS: ['*'] },
+          Action: ['s3:GetObject'],
+          Resource: [`arn:aws:s3:::${this.bucket}/*`],
+        },
+      ],
+    })
+
+    await this.client.setBucketPolicy(this.bucket, policy)
   }
 
   async putObject(objectName: string, buffer: Buffer, contentType: string) {

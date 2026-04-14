@@ -10,9 +10,9 @@ export default async function CabinetLayout({ children }: { children: React.Reac
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen flex-col overflow-hidden md:flex-row">
       <CabinetSidebar />
-      <main className="flex-1 overflow-y-auto bg-muted/20 p-6">{children}</main>
+      <main className="flex-1 overflow-y-auto bg-muted/20 p-4 md:p-6">{children}</main>
     </div>
   )
 }

@@ -33,7 +33,7 @@ export function AdminSidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="flex h-full w-56 shrink-0 flex-col border-r border-border bg-muted/40">
+    <aside className="hidden md:flex h-full w-56 shrink-0 flex-col border-r border-border bg-muted/40">
       <div className="flex h-14 items-center border-b border-border px-4">
         <Link href="/admin" className="text-base font-bold text-primary">
           CMS Admin

@@ -54,5 +54,5 @@ export interface BlogComment {
   isDeleted: boolean
   author: BlogAuthor
   parentId: number | null
-  replies: BlogComment[]
+  replies?: BlogComment[]
 }
