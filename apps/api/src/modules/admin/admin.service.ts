@@ -1,10 +1,22 @@
 import { Injectable } from '@nestjs/common'
-import { PageStatus } from '@prisma/client'
+import { PageStatus, Role } from '@prisma/client'
 import { PrismaService } from '../../prisma/prisma.service'
+
+const USER_SELECT = {
+  id: true,
+  username: true,
+  email: true,
+  role: true,
+  avatar: true,
+  isActive: true,
+  createdAt: true,
+}
 
 @Injectable()
 export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
+
+  // ── Дашборд ────────────────────────────────────────────────────────────────
 
   async getDashboard() {
     const now = new Date()
@@ -72,7 +84,6 @@ export class AdminService {
       }),
     ])
 
-    // ── Последние действия ───────────────────────────────────────────────────
     const activity = [
       ...recentPages.map((p) => ({
         type: 'page' as const,
@@ -103,7 +114,6 @@ export class AdminService {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 10)
 
-    // ── Данные для графика (14 дней) ─────────────────────────────────────────
     const chartData = []
     for (let i = 13; i >= 0; i--) {
       const date = new Date(now)
@@ -114,7 +124,6 @@ export class AdminService {
       const posts = chartGramPosts.filter(
         (p) => p.createdAt.toISOString().slice(0, 10) === dateStr,
       ).length
-
       const users = chartUsers.filter(
         (u) => u.createdAt.toISOString().slice(0, 10) === dateStr,
       ).length
@@ -134,5 +143,52 @@ export class AdminService {
       recentActivity: activity,
       chartData,
     }
+  }
+
+  // ── Управление пользователями ──────────────────────────────────────────────
+
+  async getUsers(options: { search?: string; role?: Role; page?: number; limit?: number }) {
+    const { search, role, page = 1, limit = 20 } = options
+
+    const where = {
+      ...(search
+        ? {
+            OR: [
+              { username: { contains: search, mode: 'insensitive' as const } },
+              { email: { contains: search, mode: 'insensitive' as const } },
+            ],
+          }
+        : {}),
+      ...(role ? { role } : {}),
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+        select: USER_SELECT,
+      }),
+      this.prisma.user.count({ where }),
+    ])
+
+    return { items, total, page, limit, pages: Math.ceil(total / limit) }
+  }
+
+  async changeUserRole(id: number, role: Role) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { role },
+      select: USER_SELECT,
+    })
+  }
+
+  async setUserActive(id: number, isActive: boolean) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { isActive },
+      select: USER_SELECT,
+    })
   }
 }
