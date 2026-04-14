@@ -1,4 +1,18 @@
-// layout заглушка — в шаге 1.8 добавим проверку авторизации
-export default function CabinetLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>
+import { redirect } from 'next/navigation'
+import { CabinetSidebar } from '@/components/cabinet/cabinet-sidebar'
+import { getCurrentUser } from '@/lib/server/get-current-user'
+
+export default async function CabinetLayout({ children }: { children: React.ReactNode }) {
+  const user = await getCurrentUser()
+
+  if (!user) {
+    redirect('/login')
+  }
+
+  return (
+    <div className="flex h-screen overflow-hidden">
+      <CabinetSidebar />
+      <main className="flex-1 overflow-y-auto bg-muted/20 p-6">{children}</main>
+    </div>
+  )
 }

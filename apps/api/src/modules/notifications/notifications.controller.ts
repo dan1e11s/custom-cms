@@ -26,10 +26,7 @@ export class NotificationsController {
 
   @Get()
   @ApiOperation({ summary: 'Мои уведомления' })
-  getMyNotifications(
-    @CurrentUser() user: AuthUser,
-    @Query('limit') limit?: string,
-  ) {
+  getMyNotifications(@CurrentUser() user: AuthUser, @Query('limit') limit?: string) {
     return this.notificationsService.getMyNotifications(user.id, limit ? Number(limit) : 30)
   }
 

@@ -125,9 +125,7 @@ export function NotificationBell() {
         {/* Список */}
         <div className="max-h-[400px] overflow-y-auto">
           {items.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              Уведомлений пока нет
-            </p>
+            <p className="py-8 text-center text-sm text-muted-foreground">Уведомлений пока нет</p>
           ) : (
             items.map((n) => (
               <NotificationItem
@@ -184,9 +182,7 @@ function NotificationItem({
       </div>
 
       {/* Индикатор непрочитанного */}
-      {!n.isRead && (
-        <span className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-primary" />
-      )}
+      {!n.isRead && <span className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-primary" />}
     </Link>
   )
 }

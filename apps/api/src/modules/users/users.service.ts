@@ -1,5 +1,13 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
+import * as bcrypt from 'bcrypt'
 import { PrismaService } from '../../prisma/prisma.service'
+import { MinioService } from '../media/minio.service'
+import { ChangePasswordDto } from './dto/change-password.dto'
 import { UpdateProfileDto } from './dto/update-profile.dto'
 
 const PUBLIC_FIELDS = {
@@ -15,7 +23,10 @@ const PUBLIC_FIELDS = {
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly minio: MinioService,
+  ) {}
 
   async findById(id: number) {
     const user = await this.prisma.user.findUnique({
@@ -55,6 +66,27 @@ export class UsersService {
     })
   }
 
+  async uploadAvatar(id: number, file: Express.Multer.File) {
+    const ext = file.originalname.split('.').pop() ?? 'jpg'
+    const objectName = `avatars/${id}-${Date.now()}.${ext}`
+    await this.minio.putObject(objectName, file.buffer, file.mimetype)
+    const url = this.minio.getObjectUrl(objectName)
+    return this.updateAvatar(id, url)
+  }
+
+  async changePassword(id: number, dto: ChangePasswordDto) {
+    const user = await this.prisma.user.findUnique({ where: { id } })
+    if (!user) throw new NotFoundException('User not found')
+
+    const match = await bcrypt.compare(dto.currentPassword, user.passwordHash)
+    if (!match) throw new BadRequestException('Текущий пароль неверный')
+
+    const newHash = await bcrypt.hash(dto.newPassword, 12)
+    await this.prisma.user.update({ where: { id }, data: { passwordHash: newHash } })
+
+    return { success: true }
+  }
+
   async setActive(id: number, isActive: boolean) {
     const user = await this.prisma.user.findUnique({ where: { id } })
     if (!user) throw new NotFoundException('User not found')
@@ -64,5 +96,62 @@ export class UsersService {
       data: { isActive },
       select: PUBLIC_FIELDS,
     })
+  }
+
+  // ── Кабинет ────────────────────────────────────────────────────────────────
+
+  async getMyGramPosts(userId: number) {
+    return this.prisma.gramPost.findMany({
+      where: { authorId: userId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      include: {
+        tags: { select: { id: true, slug: true, name: true } },
+        _count: { select: { likes: true, comments: true } },
+      },
+    })
+  }
+
+  async getMyComments(userId: number) {
+    return this.prisma.comment.findMany({
+      where: { authorId: userId, isDeleted: false },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      include: {
+        gramPost: { select: { id: true, content: true } },
+        blogPost: { select: { id: true, title: true, slug: true } },
+      },
+    })
+  }
+
+  async getMyForumActivity(userId: number) {
+    const [threads, posts] = await Promise.all([
+      this.prisma.forumThread.findMany({
+        where: { authorId: userId },
+        orderBy: { createdAt: 'desc' },
+        take: 30,
+        include: {
+          section: { select: { id: true, slug: true, title: true } },
+          _count: { select: { posts: true } },
+        },
+      }),
+      this.prisma.forumPost.findMany({
+        where: { authorId: userId, isDeleted: false },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+        include: {
+          thread: {
+            select: {
+              id: true,
+              title: true,
+              slug: true,
+              section: { select: { slug: true } },
+            },
+          },
+        },
+      }),
+    ])
+
+    return { threads, posts }
   }
 }
