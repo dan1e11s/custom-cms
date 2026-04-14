@@ -12,6 +12,7 @@ import { BlogModule } from './modules/blog/blog.module'
 import { CatalogModule } from './modules/catalog/catalog.module'
 import { ForumModule } from './modules/forum/forum.module'
 import { GramModule } from './modules/gram/gram.module'
+import { NotificationsModule } from './modules/notifications/notifications.module'
 import { MediaModule } from './modules/media/media.module'
 import { PagesModule } from './modules/pages/pages.module'
 import { SeoModule } from './modules/seo/seo.module'
@@ -38,6 +39,7 @@ import { PrismaModule } from './prisma/prisma.module'
     WebsocketsModule,
     GramModule,
     ForumModule,
+    NotificationsModule,
     // Модули подключаются по мере реализации фаз:
     // [x] PagesModule      — Фаза 2
     // [x] SeoModule        — Фаза 2
@@ -45,8 +47,8 @@ import { PrismaModule } from './prisma/prisma.module'
     // [x] BlogModule       — Фаза 3
     // [x] WebsocketsModule — Фаза 4
     // [x] GramModule       — Фаза 4
-    // [x] ForumModule      — Фаза 4
-    // NotificationsModule  — Фаза 4
+    // [x] ForumModule          — Фаза 4
+    // [x] NotificationsModule  — Фаза 4
   ],
   controllers: [AppController],
   providers: [

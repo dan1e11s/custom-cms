@@ -2,6 +2,7 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { PageStatus } from '@prisma/client'
 import { PrismaService } from '../../prisma/prisma.service'
 import { AppGateway } from '../websockets/app.gateway'
+import { NotificationsService } from '../notifications/notifications.service'
 import { CreateGramCommentDto } from './dto/create-gram-comment.dto'
 import { CreateGramPostDto } from './dto/create-gram-post.dto'
 import { GetFeedDto } from './dto/get-feed.dto'
@@ -18,6 +19,7 @@ export class GramService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly gateway: AppGateway,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -125,7 +127,7 @@ export class GramService {
   // ══════════════════════════════════════════════════════════════════════════
 
   async toggleLike(postId: number, userId: number) {
-    await this.getPostById(postId)
+    const post = await this.getPostById(postId)
 
     const existing = await this.prisma.like.findUnique({
       where: { userId_gramPostId: { userId, gramPostId: postId } },
@@ -135,6 +137,19 @@ export class GramService {
       await this.prisma.like.delete({ where: { id: existing.id } })
     } else {
       await this.prisma.like.create({ data: { userId, gramPostId: postId } })
+
+      // Уведомление автору поста о новом лайке
+      const actor = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { username: true },
+      })
+      this.notifications
+        .notify(post.author.id, userId, 'like', {
+          actorName: actor?.username ?? '...',
+          text: 'поставил лайк на ваш пост',
+          url: `/gram`,
+        })
+        .catch(() => {})
     }
 
     const count = await this.prisma.like.count({ where: { gramPostId: postId } })
@@ -175,7 +190,7 @@ export class GramService {
   }
 
   async addComment(postId: number, dto: CreateGramCommentDto, userId: number) {
-    await this.getPostById(postId)
+    const post = await this.getPostById(postId)
 
     if (dto.parentId) {
       const parent = await this.prisma.comment.findUnique({ where: { id: dto.parentId } })
@@ -196,6 +211,36 @@ export class GramService {
 
     // Уведомляем всех в ленте
     this.gateway.emit('gram:feed', 'gram:new_comment', { postId, comment })
+
+    // Уведомление автору поста о комментарии (в фоне — не блокируем ответ)
+    const actor = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { username: true },
+    })
+    this.notifications
+      .notify(post.author.id, userId, 'post_comment', {
+        actorName: actor?.username ?? '...',
+        text: 'прокомментировал ваш пост',
+        url: `/gram`,
+      })
+      .catch(() => {})
+
+    // Если это ответ на комментарий — уведомляем автора родительского
+    if (dto.parentId) {
+      const parent = await this.prisma.comment.findUnique({
+        where: { id: dto.parentId },
+        select: { authorId: true },
+      })
+      if (parent) {
+        this.notifications
+          .notify(parent.authorId, userId, 'comment_reply', {
+            actorName: actor?.username ?? '...',
+            text: 'ответил на ваш комментарий',
+            url: `/gram`,
+          })
+          .catch(() => {})
+      }
+    }
 
     return comment
   }

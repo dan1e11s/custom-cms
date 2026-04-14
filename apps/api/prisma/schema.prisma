@@ -36,14 +36,15 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  pages        Page[]
-  blogPosts    BlogPost[]
-  gramPosts    GramPost[]
-  comments     Comment[]
-  likes        Like[]
-  forumPosts   ForumPost[]
-  forumThreads ForumThread[]
-  media        Media[]
+  pages         Page[]
+  blogPosts     BlogPost[]
+  gramPosts     GramPost[]
+  comments      Comment[]
+  likes         Like[]
+  forumPosts    ForumPost[]
+  forumThreads  ForumThread[]
+  media         Media[]
+  notifications Notification[]
 }
 
 // ─── Pages ───────────────────────────────────────────────────────────────────
@@ -242,6 +243,21 @@ model ForumPost {
   comments  Comment[]
   isDeleted Boolean     @default(false)
   createdAt DateTime    @default(now())
+}
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // 'like' | 'post_comment' | 'comment_reply' | 'forum_reply'
+  payload   Json     // { actorName, text, url }
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
 }
 
 // ─── SEO ──────────────────────────────────────────────────────────────────────

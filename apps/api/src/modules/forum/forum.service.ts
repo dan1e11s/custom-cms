@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common'
 import { PrismaService } from '../../prisma/prisma.service'
 import { AppGateway } from '../websockets/app.gateway'
+import { NotificationsService } from '../notifications/notifications.service'
 import { CreateForumPostDto } from './dto/create-forum-post.dto'
 import { CreateSectionDto } from './dto/create-section.dto'
 import { CreateThreadDto } from './dto/create-thread.dto'
@@ -34,6 +35,7 @@ export class ForumService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly gateway: AppGateway,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -259,6 +261,19 @@ export class ForumService {
 
     // Real-time: новый пост в теме
     this.gateway.emit(`forum:thread:${threadId}`, 'forum:new_post', post)
+
+    // Уведомление автору темы об ответе (в фоне)
+    const actor = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { username: true },
+    })
+    this.notifications
+      .notify(thread.authorId, userId, 'forum_reply', {
+        actorName: actor?.username ?? '...',
+        text: 'ответил в вашей теме',
+        url: `/forum/${thread.section.slug}/${thread.slug}`,
+      })
+      .catch(() => {})
 
     return post
   }
