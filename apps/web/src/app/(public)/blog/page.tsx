@@ -34,23 +34,18 @@ export default async function BlogPage({ searchParams }: Props) {
 
   const [postsData, tags, categories] = await Promise.all([
     blogServerApi
-      .getPosts(
-        {
-          search: searchParams.search,
-          categorySlug: searchParams.categorySlug,
-          tag: searchParams.tag,
-          page,
-          limit,
-          sortBy: searchParams.sortBy ?? 'publishedAt',
-          sortOrder: (searchParams.sortOrder as 'asc' | 'desc') ?? 'desc',
-        },
-        { tags: ['blog'], revalidate: false },
-      )
+      .getPosts({
+        search: searchParams.search,
+        categorySlug: searchParams.categorySlug,
+        tag: searchParams.tag,
+        page,
+        limit,
+        sortBy: searchParams.sortBy ?? 'publishedAt',
+        sortOrder: (searchParams.sortOrder as 'asc' | 'desc') ?? 'desc',
+      })
       .catch((): BlogListResponse => ({ items: [], total: 0, page: 1, limit, pages: 0 })),
-    blogServerApi.getTags({ tags: ['blog'], revalidate: false }).catch((): BlogTag[] => []),
-    blogServerApi
-      .getCategories({ tags: ['blog'], revalidate: false })
-      .catch((): BlogCategory[] => []),
+    blogServerApi.getTags().catch((): BlogTag[] => []),
+    blogServerApi.getCategories().catch((): BlogCategory[] => []),
   ])
 
   const hasFilters = searchParams.search || searchParams.categorySlug || searchParams.tag

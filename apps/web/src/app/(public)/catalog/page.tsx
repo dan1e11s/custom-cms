@@ -41,21 +41,18 @@ export default async function CatalogPage({ searchParams }: Props) {
   let activeCategory: Category | undefined
 
   const [tree, productsData] = await Promise.all([
-    catalogServerApi.getCategoryTree({ tags: ['catalog'] }).catch(() => [] as Category[]),
+    catalogServerApi.getCategoryTree().catch(() => [] as Category[]),
     catalogServerApi
-      .getProducts(
-        {
-          search: searchParams.search,
-          minPrice: searchParams.minPrice ? Number(searchParams.minPrice) : undefined,
-          maxPrice: searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined,
-          inStock: searchParams.inStock === 'true' ? true : undefined,
-          page,
-          limit,
-          sortBy: (searchParams.sortBy as 'createdAt' | 'price' | 'name') ?? 'createdAt',
-          sortOrder: (searchParams.sortOrder as 'asc' | 'desc') ?? 'desc',
-        },
-        { tags: ['catalog'], revalidate: false },
-      )
+      .getProducts({
+        search: searchParams.search,
+        minPrice: searchParams.minPrice ? Number(searchParams.minPrice) : undefined,
+        maxPrice: searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined,
+        inStock: searchParams.inStock === 'true' ? true : undefined,
+        page,
+        limit,
+        sortBy: (searchParams.sortBy as 'createdAt' | 'price' | 'name') ?? 'createdAt',
+        sortOrder: (searchParams.sortOrder as 'asc' | 'desc') ?? 'desc',
+      })
       .catch(() => ({ items: [], total: 0, page: 1, limit, pages: 0 })),
   ])
 
@@ -68,20 +65,17 @@ export default async function CatalogPage({ searchParams }: Props) {
     // Перезапрашиваем с categoryId
     if (categoryId) {
       try {
-        const filtered = await catalogServerApi.getProducts(
-          {
-            categoryId,
-            search: searchParams.search,
-            minPrice: searchParams.minPrice ? Number(searchParams.minPrice) : undefined,
-            maxPrice: searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined,
-            inStock: searchParams.inStock === 'true' ? true : undefined,
-            page,
-            limit,
-            sortBy: (searchParams.sortBy as 'createdAt' | 'price' | 'name') ?? 'createdAt',
-            sortOrder: (searchParams.sortOrder as 'asc' | 'desc') ?? 'desc',
-          },
-          { tags: ['catalog'], revalidate: false },
-        )
+        const filtered = await catalogServerApi.getProducts({
+          categoryId,
+          search: searchParams.search,
+          minPrice: searchParams.minPrice ? Number(searchParams.minPrice) : undefined,
+          maxPrice: searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined,
+          inStock: searchParams.inStock === 'true' ? true : undefined,
+          page,
+          limit,
+          sortBy: (searchParams.sortBy as 'createdAt' | 'price' | 'name') ?? 'createdAt',
+          sortOrder: (searchParams.sortOrder as 'asc' | 'desc') ?? 'desc',
+        })
         Object.assign(productsData, filtered)
       } catch {
         // используем предыдущий результат
