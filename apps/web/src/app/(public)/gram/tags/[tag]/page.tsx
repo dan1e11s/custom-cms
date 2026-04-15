@@ -20,14 +20,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function GramTagPage({ params }: Props) {
-  const posts = await gramServerApi
-    .getFeed(20, { revalidate: 60 })
-    .then(() =>
-      // Используем клиентский serverApi для фильтрации по тегу
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/gram/tags/${params.tag}`, {
-        next: { revalidate: 60 },
-      }).then((r) => (r.ok ? r.json() : [])),
-    )
+  const posts = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/gram/tags/${params.tag}`, {
+    cache: 'no-store',
+  })
+    .then((r) => (r.ok ? r.json() : []))
     .catch(() => [])
 
   return (

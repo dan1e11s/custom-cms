@@ -18,7 +18,7 @@ export default async function ForumPage() {
   let sections: ForumSection[] = []
 
   try {
-    sections = await forumServerApi.getSections({ tags: ['forum'], revalidate: false })
+    sections = await forumServerApi.getSections()
   } catch {
     // API недоступен — показываем пустой список
   }
