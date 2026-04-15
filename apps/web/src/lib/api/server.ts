@@ -23,16 +23,26 @@ interface FetchOptions extends RequestInit {
 async function serverFetch<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { tags, revalidate, ...rest } = options
 
+  // Если явно заданы теги или revalidate — используем Next.js Data Cache.
+  // Иначе: cache: 'no-store' чтобы данные всегда приходили свежими из бекенда.
+  // Передача next: {} без revalidate активирует кэш по умолчанию (force-cache),
+  // что приводит к отображению устаревших данных даже на force-dynamic страницах.
+  const hasCacheConfig = tags?.length || revalidate !== undefined
+
   const res = await fetch(`${BASE_URL}${endpoint}`, {
     ...rest,
     headers: {
       'Content-Type': 'application/json',
       ...rest.headers,
     },
-    next: {
-      ...(tags ? { tags } : {}),
-      ...(revalidate !== undefined ? { revalidate } : {}),
-    },
+    ...(hasCacheConfig
+      ? {
+          next: {
+            ...(tags ? { tags } : {}),
+            ...(revalidate !== undefined ? { revalidate } : {}),
+          },
+        }
+      : { cache: 'no-store' }),
   })
 
   if (!res.ok) {
