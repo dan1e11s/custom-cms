@@ -22,6 +22,16 @@ enum PageStatus {
   ARCHIVED
 }
 
+enum NavItemType {
+  PAGE      // Обычная страница или произвольная ссылка
+  CATALOG   // Каталог → href = /catalog
+  BLOG      // Блог → href = /blog
+  FORUM     // Форум → href = /forum
+  GRAM      // Соцлента → href = /gram
+  EXTERNAL  // Внешняя ссылка (target="_blank")
+  DROPDOWN  // Только группа (нет своей ссылки, только children)
+}
+
 // ─── Users ──────────────────────────────────────────────────────────────────
 
 model User {
@@ -50,20 +60,22 @@ model User {
 // ─── Pages ───────────────────────────────────────────────────────────────────
 
 model Page {
-  id        Int        @id @default(autoincrement())
-  slug      String     @unique
-  title     String
-  status    PageStatus @default(DRAFT)
-  template  String     @default("landing")
-  blocks    Json       // Массив блоков с конфигурацией
-  authorId  Int
-  author    User       @relation(fields: [authorId], references: [id])
-  seo       PageSeo?
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id         Int        @id @default(autoincrement())
+  slug       String     @unique
+  title      String
+  status     PageStatus @default(DRAFT)
+  template   String     @default("landing")
+  blocks     Json       // Массив блоков с конфигурацией
+  isHomePage Boolean    @default(false)
+  authorId   Int
+  author     User       @relation(fields: [authorId], references: [id])
+  seo        PageSeo?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 
   @@index([slug])
   @@index([status])
+  @@index([isHomePage])
 }
 
 model PageSeo {
@@ -263,13 +275,16 @@ model Notification {
 // ─── SEO ──────────────────────────────────────────────────────────────────────
 
 model SeoSettings {
-  id             Int       @id @default(autoincrement())
-  siteName       String    @default("Мой сайт")
-  defaultOgImage String?
-  titleTemplate  String    @default("%s | Мой сайт")
-  sitemapCache   String?   @db.Text // XML-кэш sitemap
-  sitemapBuiltAt DateTime?
-  updatedAt      DateTime  @updatedAt
+  id              Int       @id @default(autoincrement())
+  siteName        String    @default("Мой сайт")
+  defaultOgImage  String?
+  titleTemplate   String    @default("%s | Мой сайт")
+  sitemapCache    String?   @db.Text // XML-кэш sitemap
+  sitemapBuiltAt  DateTime?
+  logoUrl         String?   // URL изображения-логотипа (из Media)
+  logoText        String?   // Текстовый логотип (fallback если нет logoUrl)
+  footerCopyright String?   // Текст копирайта в футере
+  updatedAt       DateTime  @updatedAt
 }
 
 model Redirect {
@@ -281,6 +296,46 @@ model Redirect {
   createdAt  DateTime @default(now())
 
   @@index([from])
+}
+
+// ─── Navigation ──────────────────────────────────────────────────────────────
+
+model NavItem {
+  id           Int         @id @default(autoincrement())
+  label        String
+  type         NavItemType @default(PAGE)
+  href         String?     // null если DROPDOWN
+  icon         String?     // Lucide icon name (опционально)
+  description  String?     // Краткое описание (показывается в дропдауне)
+  order        Int         @default(0)
+  parentId     Int?
+  parent       NavItem?    @relation("NavChildren", fields: [parentId], references: [id])
+  children     NavItem[]   @relation("NavChildren")
+  isVisible    Boolean     @default(true)
+  openInNewTab Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([parentId, order])
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+
+model FooterColumn {
+  id    Int          @id @default(autoincrement())
+  title String
+  order Int          @default(0)
+  links FooterLink[]
+}
+
+model FooterLink {
+  id           Int          @id @default(autoincrement())
+  label        String
+  href         String
+  columnId     Int
+  column       FooterColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  order        Int          @default(0)
+  openInNewTab Boolean      @default(false)
 }
 
 // ─── Media ────────────────────────────────────────────────────────────────────

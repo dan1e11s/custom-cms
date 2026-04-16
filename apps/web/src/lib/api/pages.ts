@@ -51,6 +51,8 @@ export const pagesApi = {
 
   publish: (id: number) => api.patch<Page>(`/admin/pages/${id}/publish`, {}),
 
+  unpublish: (id: number) => api.patch<Page>(`/admin/pages/${id}/unpublish`, {}),
+
   duplicate: (id: number) => api.post<Page>(`/admin/pages/${id}/duplicate`, {}),
 
   delete: (id: number) => api.delete<void>(`/admin/pages/${id}`),

@@ -33,6 +33,13 @@ export class PagesPublicController {
     return this.pagesService.findPublished(dto)
   }
 
+  @ApiOperation({ summary: 'Получить главную страницу (isHomePage=true, PUBLISHED)' })
+  @Public()
+  @Get('home')
+  findHomePage() {
+    return this.pagesService.findHomePage()
+  }
+
   @ApiOperation({ summary: 'Получить страницу по slug' })
   @Public()
   @Get(':slug')
@@ -108,6 +115,12 @@ export class PagesAdminController {
   @Post(':id/duplicate')
   duplicate(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: { id: number }) {
     return this.pagesService.duplicate(id, user.id)
+  }
+
+  @ApiOperation({ summary: 'Сделать страницу главной (isHomePage=true)' })
+  @Patch(':id/set-home')
+  setAsHomePage(@Param('id', ParseIntPipe) id: number) {
+    return this.pagesService.setAsHomePage(id)
   }
 
   @ApiOperation({ summary: 'Удалить страницу' })

@@ -30,6 +30,7 @@ export interface Page {
   status: PageStatus
   template: string
   blocks: BlockConfig[]
+  isHomePage: boolean
   authorId: number
   author: PageAuthor
   seo: PageSeo | null

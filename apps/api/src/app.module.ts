@@ -20,6 +20,7 @@ import { PagesModule } from './modules/pages/pages.module'
 import { SeoModule } from './modules/seo/seo.module'
 import { UsersModule } from './modules/users/users.module'
 import { WebsocketsModule } from './modules/websockets/websockets.module'
+import { SiteModule } from './modules/site/site.module'
 import { PrismaModule } from './prisma/prisma.module'
 
 @Module({
@@ -44,6 +45,7 @@ import { PrismaModule } from './prisma/prisma.module'
     GramModule,
     ForumModule,
     NotificationsModule,
+    SiteModule,
     // Модули подключаются по мере реализации фаз:
     // [x] PagesModule      — Фаза 2
     // [x] SeoModule        — Фаза 2

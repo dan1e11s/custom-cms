@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Edit2, Trash2, Copy, Globe, FileText } from 'lucide-react'
+import { Plus, Edit2, Trash2, Copy, Globe, FileText, Home } from 'lucide-react'
 import { pagesApi } from '@/lib/api/pages'
+import { siteAdminApi } from '@/lib/api/site'
 import type { Page, PagesListResponse } from '@/types/pages'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -105,6 +106,15 @@ export default function AdminPagesPage() {
     }
   }
 
+  async function handleSetHomePage(id: number) {
+    try {
+      await siteAdminApi.setHomePage(id)
+      loadPages()
+    } catch {
+      // ignore
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -158,13 +168,21 @@ export default function AdminPagesPage() {
                   className="border-b last:border-0 hover:bg-muted/20 transition-colors"
                 >
                   <td className="px-4 py-3">
-                    <button
-                      type="button"
-                      className="font-medium hover:text-primary transition-colors text-left"
-                      onClick={() => router.push(`/pages/${page.id}`)}
-                    >
-                      {page.title}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {page.isHomePage && (
+                        <Home
+                          className="h-3.5 w-3.5 shrink-0 text-primary"
+                          aria-label="Главная страница"
+                        />
+                      )}
+                      <button
+                        type="button"
+                        className="font-medium hover:text-primary transition-colors text-left"
+                        onClick={() => router.push(`/pages/${page.id}`)}
+                      >
+                        {page.title}
+                      </button>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
                     /{page.slug}
@@ -194,6 +212,17 @@ export default function AdminPagesPage() {
                       >
                         <Edit2 className="h-3.5 w-3.5" />
                       </Button>
+                      {page.status === 'PUBLISHED' && !page.isHomePage && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          title="Сделать главной страницей"
+                          onClick={() => handleSetHomePage(page.id)}
+                        >
+                          <Home className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"

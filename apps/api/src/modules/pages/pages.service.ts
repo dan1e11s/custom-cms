@@ -243,6 +243,25 @@ export class PagesService {
     return { success: true }
   }
 
+  // ── Главная страница ──────────────────────────────────────────────────────
+
+  async findHomePage() {
+    return this.prisma.page.findFirst({
+      where: { isHomePage: true, status: PageStatus.PUBLISHED },
+      include: PAGE_INCLUDE,
+    })
+  }
+
+  async setAsHomePage(id: number) {
+    await this.findById(id)
+    await this.prisma.$transaction([
+      this.prisma.page.updateMany({ data: { isHomePage: false } }),
+      this.prisma.page.update({ where: { id }, data: { isHomePage: true } }),
+    ])
+    this.revalidation.revalidate('home-page').catch(() => {})
+    return this.findById(id)
+  }
+
   // ── Приватные утилиты ─────────────────────────────────────────────────────
 
   private async ensureSlugUnique(slug: string, excludeId?: number) {
